@@ -11,10 +11,10 @@ TOOLCHAIN := $(DEVKITARM)
 
 .PHONY: clean all
 
-SYSTEM = $(shell grep -i -q 'microsoft' /proc/version; echo $$?)
+#SYSTEM = $(shell grep -i -q 'microsoft' /proc/version; echo $$?)
 
-ifeq ($(SYSTEM), 0)
-EXE := .exe
+ifeq ($(OS),Windows_NT)
+EXE :=
 SEP := \\
 else
 EXE := 
