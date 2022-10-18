@@ -2,7 +2,6 @@
 
 from glob import glob
 from pathlib import Path
-from platform import uname
 import os
 import shutil
 import itertools
@@ -213,11 +212,8 @@ def build_ow():
             OBJ = "build/pokemonow/2_" + i.replace(".png","")
             flag = True
         if os.path.isfile(OBJ) and os.path.getmtime(DIR + "/" + i) < os.path.getmtime(OBJ):
-            continue
-        if 'icrosoft' in uname().release:
-            cmd = ["tools/pngtobtx0.exe"] + [DIR + "/" + i,OBJ]
-        else:
-            cmd = ["mono"] + ["tools/pngtobtx0.exe"] + [DIR + "/" + i,OBJ]
+            continue      
+        cmd = ["mono"] + ["tools/pngtobtx0.exe"] + [DIR + "/" + i,OBJ]
         print("build " + i)
         file.append(i.replace(".png",''))
         RunCommand(cmd)

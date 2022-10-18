@@ -4,7 +4,7 @@ LABEL maintainer="DavveDP"
 LABEL version="0.1"
 LABEL description="docker image for building hg-engine"
 
-ADD hg-engine /hg-engine
+ADD . /hg-engine
 RUN DEBIAN_FRONTEND=noninteractive apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
 && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends libpng-dev build-essential cmake python3-pip automake wget git gnupg ca-certificates -y \
 && pip3 install --no-cache-dir ndspy \
