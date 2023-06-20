@@ -4806,3 +4806,9 @@ u32 SpeciesAndFormeToWazaOshieIndex(u32 species, u32 form)
     ret--;
     return ret;
 }
+
+
+u32 IsLevelAtLevelCap(u32 level)
+{
+    return (level >= GetScriptVar(LEVEL_CAP_VARIABLE));
+}

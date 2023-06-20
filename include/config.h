@@ -61,4 +61,9 @@
 // commenting this line out disables critical captures
 #define IMPLEMENT_CRITICAL_CAPTURE
 
+
+// garbage gold configs
+// determine which variable should be the level cap variable
+#define LEVEL_CAP_VARIABLE 0x416F
+
 #endif
