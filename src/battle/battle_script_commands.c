@@ -1438,6 +1438,11 @@ u32 CalculateBallShakes(void *bw, struct BattleStruct *sp)
     {
         captureRate = PokePersonalParaGet(sp->battlemon[sp->defence_client].species, PERSONAL_CATCH_RATE);
     }
+    
+    if (captureRate == 0) // various pokemon can not get caught ever.  this makes sure of that
+    {
+        return (BattleRand(bw) % 4);
+    }
 
     ballRate = 10;
     type1 = BattlePokemonParamGet(sp, sp->defence_client, BATTLE_MON_DATA_TYPE1, 0); // type 1
