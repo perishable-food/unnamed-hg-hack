@@ -61,6 +61,10 @@
 // commenting this line out disables critical captures
 #define IMPLEMENT_CRITICAL_CAPTURE
 
+// IMPLEMENT_NEW_EV_IV_VIEWER defines whether or not pressing L, R, or Select in the pokémon summaries will display EV's, IV's, or the raw stat
+// commenting this line out disables the building of the new EV/IV viewing system
+#define IMPLEMENT_NEW_EV_IV_VIEWER
+
 
 // garbage gold configs
 // determine which variable should be the level cap variable
