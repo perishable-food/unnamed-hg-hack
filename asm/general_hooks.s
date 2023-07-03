@@ -289,3 +289,5 @@ ldr r3, =0x2245B3E|1
 
 bx_r3:
 bx r3
+
+.pool

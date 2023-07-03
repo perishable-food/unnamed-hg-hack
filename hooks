@@ -308,4 +308,9 @@ arm9 Summary_Entry_Hook 0208D2C4 1
 #endif
 
 
+#ifdef IMPLEMENT_LEVEL_CAP
+
 0012 ImplementLevelCap_hook 02245A28 3
+arm9 Pokemon_TryLevelUp 02070DB4 1
+
+#endif
