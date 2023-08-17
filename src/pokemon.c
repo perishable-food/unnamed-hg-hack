@@ -1419,6 +1419,12 @@ const struct FormData PokeFormDataTbl[]=
         .need_rev = 0,
         .file = SPECIES_SLOWPOKE_GALARIAN,
     },
+    { // slowpoke is really fun because slowbro has two forms so we have this duplicate entry here to map it properly during the evolution sequence
+        .species = SPECIES_SLOWPOKE,
+        .form_no = 2,
+        .need_rev = 0,
+        .file = SPECIES_SLOWPOKE_GALARIAN,
+    },
     {
         .species = SPECIES_SLOWBRO,
         .form_no = 2,
@@ -1599,13 +1605,13 @@ const struct FormData PokeFormDataTbl[]=
         .species = SPECIES_BASCULIN,
         .form_no = 1,
         .need_rev = 0,
-        .file = SPECIES_BASCULIN_BLUE_STRIPED,
+        .file = SPECIES_BASCULIN_RED_STRIPED,
     },
     {
         .species = SPECIES_BASCULIN,
         .form_no = 2,
         .need_rev = 0,
-        .file = SPECIES_BASCULIN_WHITE_STRIPED,
+        .file = SPECIES_BASCULIN_BLUE_STRIPED,
     },
     {
         .species = SPECIES_DEERLING,
@@ -2146,13 +2152,13 @@ const struct FormData PokeFormDataTbl[]=
     {
         .species = SPECIES_SHELLOS,
         .form_no = 1,
-        .need_rev = 1,
+        .need_rev = 0,
         .file = SPECIES_SHELLOS_EAST_SEA,
     },
     {
         .species = SPECIES_GASTRODON,
         .form_no = 1,
-        .need_rev = 1,
+        .need_rev = 0,
         .file = SPECIES_GASTRODON_EAST_SEA,
     },
     {
@@ -2533,7 +2539,7 @@ const struct FormData PokeFormDataTbl[]=
     },
     {
         .species = SPECIES_BASCULEGION,
-        .form_no = 1,
+        .form_no = 3,
         .need_rev = 0,
         .file = SPECIES_BASCULEGION_FEMALE,
     },
@@ -2998,7 +3004,7 @@ u32 __attribute__((long_call)) HandleBoxPokemonFormeChanges(struct BoxPokemon* b
     return 0;
 }
 
-u32 __attribute__((long_call)) CanUseRevealMirror(struct PartyPokemon *pp)
+u32 __attribute__((long_call)) CanUseRevealGlass(struct PartyPokemon *pp)
 {
     u32 species = GetMonData(pp, ID_PARA_monsno, NULL);
     
@@ -3054,8 +3060,8 @@ u32 __attribute__((long_call)) UseItemFormeChangeCheck(struct PLIST_WORK *wk, vo
         return 1;
     }
     
-    if (wk->dat->item == ITEM_REVEAL_MIRROR
-     && CanUseRevealMirror(pp) == 1)
+    if (wk->dat->item == ITEM_REVEAL_GLASS
+     && CanUseRevealGlass(pp) == 1)
     {
         if (GetMonData(pp, ID_PARA_form_no, NULL) == 1)
             wk->dat->after_mons = 0; // change to incarnate forme
@@ -4006,10 +4012,19 @@ void __attribute__((long_call)) CreateBoxMonData(struct BoxPokemon *boxmon, int 
     BoxMonSetFastModeOff(boxmon,flag);
 }
 
-bool8 __attribute__((long_call)) RevertFormChange(void *pp, u16 species, u8 form_no)
+bool8 __attribute__((long_call)) RevertFormChange(struct PartyPokemon *pp, u16 species, u8 form_no)
 {
     u32 i;
     int work = 0;
+
+    // use this chance to make bad poisoning normal poison at the end of battle
+    work = GetMonData(pp, ID_PARA_condition, NULL);
+    if (work & STATUS_FLAG_BADLY_POISONED)
+    {
+        work &= ~(STATUS_FLAG_BADLY_POISONED);
+        work |= STATUS_FLAG_POISONED;
+        SetMonData(pp, ID_PARA_condition, &work);
+    }
 
     for (i = 0; i < NELEMS(PokeFormDataTbl); i++)
     {

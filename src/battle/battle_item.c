@@ -238,8 +238,8 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                 // Attacker dealt physical damage
                 && (sp->oneSelfFlag[sp->defence_client].physical_damage)) {
                 sp->hp_calc_work = BattleDamageDivide(sp->battlemon[sp->attack_client].maxhp * -1, itemPower);
-                seq_no[0]                = SUB_SEQ_PHYSICAL_DMG_RECOIL;
-                ret                      = TRUE;
+                seq_no[0]        = SUB_SEQ_PHYSICAL_DMG_RECOIL;
+                ret              = TRUE;
             }
             break;
 
@@ -253,8 +253,8 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                 // Attacker dealt special damage
                 && (sp->oneSelfFlag[sp->defence_client].special_damage)) {
                 sp->hp_calc_work = BattleDamageDivide(sp->battlemon[sp->attack_client].maxhp * -1, itemPower);
-                seq_no[0]                = SUB_SEQ_PHYSICAL_DMG_RECOIL;
-                ret                      = TRUE;
+                seq_no[0]        = SUB_SEQ_PHYSICAL_DMG_RECOIL;
+                ret              = TRUE;
             }
             break;
 
@@ -265,15 +265,13 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                 && (sp->waza_status_flag & MOVE_STATUS_FLAG_SUPER_EFFECTIVE)) {
                 sp->client_work = sp->defence_client;
                 sp->item_work   = sp->battlemon[sp->defence_client].item;
-                seq_no[0]                = SUB_SEQ_HANDLE_ITEM_RESTORE_HP;
-                ret                      = TRUE;
+                seq_no[0]       = SUB_SEQ_HANDLE_ITEM_RESTORE_HP;
+                ret             = TRUE;
             }
             break;
 
-            //these effects are not usable at all yet
-#ifdef LATER_GEN_ITEM_EFFECTS
             // gen5 effects
-        case HOLD_EFFECT_BOOST_SPA_ON_WATER_HIT:                // Absorb Bulb
+        case HOLD_EFFECT_BOOST_SPECIAL_ATTACK_ON_WATER_HIT:     // Absorb Bulb
             // Defender is alive after the attack
             if ((sp->battlemon[sp->defence_client].hp)
                 // Defender was hit by a Water-type attack
@@ -286,12 +284,9 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                     // Or the defender has Contrary and more than -6 stages to Special Attack
                     || ((GetBattlerAbility(sp, sp->defence_client) == ABILITY_CONTRARY)
                         && (sp->battlemon[sp->defence_client].states[STAT_SPATK] > 0)))) {
-                sp->addeffect_type   = ADD_EFFECT_HELD_ITEM;
-                sp->addeffect_param  = ADD_STATE_SP_ATK_UP;
-                sp->state_client = sp->defence_client;
-                sp->item_work        = sp->battlemon[sp->defence_client].item;
-                seq_no[0]                     = SUB_SEQ_STAT_STAGE_CHANGE;
-                ret                           = TRUE;
+                sp->state_client     = sp->defence_client;
+                seq_no[0]            = SUB_SEQ_HANDLE_RAISE_SPECIAL_ATTACK_ON_HIT;
+                ret                  = TRUE;
             }
             break;
 
@@ -319,12 +314,9 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                     // Or the defender has Contrary and more than -6 stages to Attack
                     || ((GetBattlerAbility(sp, sp->defence_client) == ABILITY_CONTRARY)
                         && (sp->battlemon[sp->defence_client].states[STAT_ATTACK] > 0)))) {
-                sp->addeffect_type   = ADD_EFFECT_HELD_ITEM;
-                sp->addeffect_param  = ADD_STATE_ATTACK_UP;
-                sp->state_client = sp->defence_client;
-                sp->item_work        = sp->battlemon[sp->defence_client].item;
-                seq_no[0]                     = SUB_SEQ_STAT_STAGE_CHANGE;
-                ret                           = TRUE;
+                sp->state_client     = sp->defence_client;
+                seq_no[0]            = SUB_SEQ_HANDLE_RAISE_ATTACK_ON_HIT;
+                ret                  = TRUE;
             }
             break;
 
@@ -333,8 +325,14 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
             if ((sp->battlemon[sp->defence_client].hp)
                 // Damage was dealt
                 && ((sp->oneSelfFlag[sp->defence_client].physical_damage)
-                    || (sp->oneSelfFlag[sp->defence_client].special_damage))) {
-                seq_no[0] = SUB_SEQ_HANDLE_EJECT_BUTTON;
+                    || (sp->oneSelfFlag[sp->defence_client].special_damage))
+                && sp->multi_hit_count <= 1) {
+                u32 temp = sp->attack_client;                   // swap attacker and defender so subseq handles it correctly
+                sp->client_work = sp->defence_client;
+                sp->attack_client = sp->defence_client;
+                sp->defence_client = temp;
+                sp->current_move_index = MOVE_U_TURN;
+                seq_no[0] = SUB_SEQ_HANDLE_SWITCHING_ITEMS;
                 ret       = TRUE;
             }
             break;
@@ -344,8 +342,13 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
             if ((sp->battlemon[sp->defence_client].hp)
                 // Damage was dealt
                 && ((sp->oneSelfFlag[sp->defence_client].physical_damage)
-                    || (sp->oneSelfFlag[sp->defence_client].special_damage))) {
-                seq_no[0] = SUB_SEQ_HANDLE_RED_CARD;
+                    || (sp->oneSelfFlag[sp->defence_client].special_damage))
+                && sp->multi_hit_count <= 1) {
+                u32 temp = sp->attack_client;                   // swap attacker and defender so subseq handles it correctly
+                sp->client_work = sp->defence_client;
+                sp->attack_client = sp->defence_client;
+                sp->defence_client = temp;
+                seq_no[0] = SUB_SEQ_HANDLE_SWITCHING_ITEMS;
                 ret       = TRUE;
             }
             break;
@@ -356,13 +359,13 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                 // Attacker does not have Magic Guard
                 && (GetBattlerAbility(sp, sp->attack_client) != ABILITY_MAGIC_GUARD)
                 // Attacker is not holding an item that prevents contact effects, e.g. Protective Pads
-                && (GetHeldItemHoldEffect(sp, sp->attack_client) != HOLD_EFFECT_PREVENT_CONTACT_EFFECTS)
+                && (HeldItemHoldEffectGet(sp, sp->attack_client) != HOLD_EFFECT_PREVENT_CONTACT_EFFECTS)
                 // Damage was dealt
                 && ((sp->oneSelfFlag[sp->defence_client].physical_damage)
                     || (sp->oneSelfFlag[sp->defence_client].special_damage))
                 // Attacker used a move that makes contact
                 && (sp->moveTbl[sp->current_move_index].flag & FLAG_CONTACT)) {
-                sp->hp_calc_work = BattleDamageDivide(sp->battlemon[sp->attack_client].maxhp * -1, itemPower);
+                sp->hp_calc_work         = BattleDamageDivide(sp->battlemon[sp->attack_client].maxhp * -1, itemPower);
                 seq_no[0]                = SUB_SEQ_PHYSICAL_DMG_RECOIL;
                 ret                      = TRUE;
             }
@@ -379,16 +382,13 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                     // Or the defender has Contrary and more than -6 stages to Defense
                     || ((GetBattlerAbility(sp, sp->defence_client) == ABILITY_CONTRARY)
                         && (sp->battlemon[sp->defence_client].states[STAT_DEFENSE] > 0)))) {
-                sp->addeffect_type   = ADD_EFFECT_HELD_ITEM;
-                sp->addeffect_param  = ADD_STATE_DEFENSE_UP;
-                sp->state_client = sp->defence_client;
-                sp->item_work        = sp->battlemon[sp->defence_client].item;
-                seq_no[0]                     = SUB_SEQ_STAT_STAGE_CHANGE;
-                ret                           = TRUE;
+                sp->state_client     = sp->defence_client;
+                seq_no[0]            = SUB_SEQ_HANDLE_RAISE_DEFENSE_ON_HIT;
+                ret                  = TRUE;
             }
             break;
 
-        case HOLD_EFFECT_BOOST_SPD_ON_WATER_HIT:                // Luminous Moss
+        case HOLD_EFFECT_BOOST_SPECIAL_DEFENSE_ON_WATER_HIT:    // Luminous Moss
             // Defender is alive after the attack
             if ((sp->battlemon[sp->defence_client].hp)
                 // Defender was hit by a Water-type attack
@@ -401,16 +401,13 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                     // Or the defender has Contrary and more than -6 stages to Special Defense
                     || ((GetBattlerAbility(sp, sp->defence_client) == ABILITY_CONTRARY)
                         && (sp->battlemon[sp->defence_client].states[STAT_SPDEF] > 0)))) {
-                sp->addeffect_type   = ADD_EFFECT_HELD_ITEM;
-                sp->addeffect_param  = ADD_STATE_SP_DEF_UP;
-                sp->state_client = sp->defence_client;
-                sp->item_work        = sp->battlemon[sp->defence_client].item;
-                seq_no[0]                     = SUB_SEQ_STAT_STAGE_CHANGE;
-                ret                           = TRUE;
+                sp->state_client     = sp->defence_client;
+                seq_no[0]            = SUB_SEQ_HANDLE_RAISE_SPECIAL_DEFENSE_ON_HIT;
+                ret                  = TRUE;
             }
             break;
 
-        case HOLD_EFFECT_BOOST_SPD_ON_SPECIAL_HIT:              // Maranga Berry
+        case HOLD_EFFECT_BOOST_SPDEF_ON_SPECIAL_HIT:            // Maranga Berry
             // Defender is alive after the attack
             if ((sp->battlemon[sp->attack_client].hp)
                 // Attacker dealt special damage
@@ -420,12 +417,9 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                     // Or the defender has Contrary and more than -6 stages to Special Defense
                     || ((GetBattlerAbility(sp, sp->defence_client) == ABILITY_CONTRARY)
                         && (sp->battlemon[sp->defence_client].states[STAT_SPDEF] > 0)))) {
-                sp->addeffect_type   = ADD_EFFECT_HELD_ITEM;
-                sp->addeffect_param  = ADD_STATE_SP_DEF_UP;
-                sp->state_client = sp->defence_client;
-                sp->item_work        = sp->battlemon[sp->defence_client].item;
-                seq_no[0]                     = SUB_SEQ_STAT_STAGE_CHANGE;
-                ret                           = TRUE;
+                sp->state_client     = sp->defence_client;
+                seq_no[0]            = SUB_SEQ_HANDLE_RAISE_SPECIAL_DEFENSE_ON_HIT;
+                ret                  = TRUE;
             }
             break;
 
@@ -442,14 +436,14 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                     // Or the defender has Contrary and more than -6 stages to Attack
                     || ((GetBattlerAbility(sp, sp->defence_client) == ABILITY_CONTRARY)
                         && (sp->battlemon[sp->defence_client].states[STAT_ATTACK] > 0)))) {
-                sp->addeffect_type   = ADD_EFFECT_HELD_ITEM;
-                sp->addeffect_param  = ADD_STATE_ATTACK_UP;
-                sp->state_client = sp->defence_client;
-                sp->item_work        = sp->battlemon[sp->defence_client].item;
-                seq_no[0]                     = SUB_SEQ_STAT_STAGE_CHANGE;
-                ret                           = TRUE;
+                sp->state_client     = sp->defence_client;
+                seq_no[0]            = SUB_SEQ_HANDLE_RAISE_ATTACK_ON_HIT;
+                ret                  = TRUE;
             }
             break;
+
+
+#ifdef LATER_GEN_ITEM_EFFECTS
 
         case HOLD_EFFECT_BOOST_ATK_AND_SPATK_ON_SE:             // Weakness Policy
             // Defender is alive after the attack
@@ -463,8 +457,9 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
                     || ((GetBattlerAbility(sp, sp->defence_client) == ABILITY_CONTRARY)
                         && ((sp->battlemon[sp->defence_client].states[STAT_ATTACK] > 0)
                             || (sp->battlemon[sp->defence_client].states[STAT_SPATK] > 0))))) {
-                seq_no[0] = SUB_SEQ_HANDLE_WEAKNESS_POLICY;
-                ret       = TRUE;
+                sp->state_client     = sp->defence_client;
+                seq_no[0]            = SUB_SEQ_HANDLE_RAISE_ATTACK_AND_SP_ATK_ON_HIT;
+                ret                  = TRUE;
             }
             break;
 
@@ -477,6 +472,7 @@ BOOL CheckDefenderItemEffectOnHit(void *bw, struct BattleStruct *sp, int *seq_no
             // *dealt* damage, rather than *dealing* damage
 
 #endif
+
         default:
             break;
     }

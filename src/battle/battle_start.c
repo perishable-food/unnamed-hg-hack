@@ -18,11 +18,12 @@
 enum
 {
     SBA_RESET_DEFIANT = 0,
-	SBA_FOCUS_PUNCH,
-	SBA_RAGE,
-	SBA_RANDOM_SPEED_ROLL,
+    SBA_RESET_FURY_CUTTER,
+    SBA_FOCUS_PUNCH,
+    SBA_RAGE,
+    SBA_RANDOM_SPEED_ROLL,
     SBA_MEGA,
-	SBA_END
+    SBA_END
 };
 
 u32	No2Bit(int no)
@@ -54,9 +55,20 @@ void ServerBeforeAct(void *bw, struct BattleStruct *sp)
         case SBA_RESET_DEFIANT:
             for (client_no = 0; client_no < client_set_max; client_no++)
             {
-                sp->oneSelfFlag[sp->state_client].defiant_flag = 0;
+                sp->oneSelfFlag[client_no].defiant_flag = 0;
             }
             sp->sba_work = 0;
+            sp->sba_seq_no++;
+            break;
+        case SBA_RESET_FURY_CUTTER:
+            for (client_no = 0; client_no < client_set_max; client_no++)
+            {
+                if (((sp->battlemon[client_no].condition & 7) != 0)
+                 || (ST_ServerSelectWazaGet(sp, client_no) != MOVE_FURY_CUTTER)
+                 || (ST_CheckIfInTruant(sp, client_no) != FALSE) 
+                 || (sp->oneTurnFlag[client_no].struggle_flag != 0))
+                sp->battlemon[client_no].moveeffect.furyCutterCount = 0;
+            }
             sp->sba_seq_no++;
             break;
         case SBA_FOCUS_PUNCH:
@@ -71,7 +83,7 @@ void ServerBeforeAct(void *bw, struct BattleStruct *sp)
                 sp->sba_work++;
                 if (((sp->battlemon[client_no].condition & 7) == 0) &&
                     (ST_ServerSelectWazaGet(sp, client_no) == MOVE_FOCUS_PUNCH) &&
-                    (ST_ServerNamakeCheck(sp, client_no) == FALSE) &&
+                    (ST_CheckIfInTruant(sp, client_no) == FALSE) &&
                     (sp->oneTurnFlag[client_no].struggle_flag == 0))
                 {
                     SCIO_BlankMessage(bw);
@@ -137,8 +149,8 @@ void ServerBeforeAct(void *bw, struct BattleStruct *sp)
                 if(flag)
                 {
                     newBS.needMega[client_no] = MEGA_NEED;
-                    if ((sp->battlemon[client_no].species == SPECIES_CHARIZARD && sp->battlemon[client_no].item == ITEM_MEGA_STONE_CHARIZARD_Y)
-                     || (sp->battlemon[client_no].species == SPECIES_MEWTWO && sp->battlemon[client_no].item == ITEM_MEGA_STONE_MEWTWO_Y))
+                    if ((sp->battlemon[client_no].species == SPECIES_CHARIZARD && sp->battlemon[client_no].item == ITEM_CHARIZARDITE_Y)
+                     || (sp->battlemon[client_no].species == SPECIES_MEWTWO && sp->battlemon[client_no].item == ITEM_MEWTWONITE_Y))
                     {
                         sp->battlemon[client_no].form_no = 2;
                         BattleFormChange(client_no, 2, bw, sp, FALSE);
@@ -203,8 +215,8 @@ static BOOL MegaEvolution(void *bw, struct BattleStruct *sp)
             }
 
             // handle charizard/mewtwo branch mega evos
-            if((sp->battlemon[client_no].species == SPECIES_CHARIZARD && sp->battlemon[client_no].item == ITEM_MEGA_STONE_CHARIZARD_Y) || 
-               (sp->battlemon[client_no].species == SPECIES_MEWTWO && sp->battlemon[client_no].item == ITEM_MEGA_STONE_MEWTWO_Y))
+            if((sp->battlemon[client_no].species == SPECIES_CHARIZARD && sp->battlemon[client_no].item == ITEM_CHARIZARDITE_Y) || 
+               (sp->battlemon[client_no].species == SPECIES_MEWTWO && sp->battlemon[client_no].item == ITEM_MEWTWONITE_Y))
             {
                 BattleFormChange(client_no, 2, bw, sp, TRUE);
                 sp->battlemon[client_no].form_no = 2;
@@ -337,7 +349,6 @@ void ServerWazaBefore(void *bw, struct BattleStruct *sp)
         case SEQ_DEFENCE_CHANGE_CHECK:
             ST_ServerDefenceClientTokuseiCheck(bw, sp, sp->attack_client, sp->current_move_index);//8019158h
             sp->wb_seq_no++;
-            break;
         case SEQ_PROTEAN_CHECK:
             if (sp->battlemon[sp->attack_client].ability == ABILITY_PROTEAN
                 && (sp->battlemon[sp->attack_client].type1 != sp->moveTbl[sp->current_move_index].type  // if either type is not the move's type
@@ -353,26 +364,30 @@ void ServerWazaBefore(void *bw, struct BattleStruct *sp)
             }
             else
             {
-                sp->wb_seq_no = 0;
+                sp->wb_seq_no++;
             }
-            break;
-        case SEQ_STANCE_CHANGE_CHECK: //TODO test this - no clue if this actually will work
+        case SEQ_STANCE_CHANGE_CHECK:
             if (sp->battlemon[sp->attack_client].ability == ABILITY_STANCE_CHANGE && sp->battlemon[sp->attack_client].species == SPECIES_AEGISLASH)
             {
+                sp->client_work = sp->attack_client;
                 if (sp->current_move_index == MOVE_KINGS_SHIELD && sp->battlemon[sp->attack_client].form_no == 1)
                 {
-                    //CODE HAS NOT BEEN TESTED
                     sp->battlemon[sp->client_work].form_no = 0;
                     BattleFormChange(sp->client_work, sp->battlemon[sp->client_work].form_no, bw, sp, 0);
                     LoadBattleSubSeqScript(sp, FILE_BATTLE_SUB_SCRIPTS, SUB_SEQ_HANDLE_FORM_CHANGE);
+                    runMyScriptInstead = 1;
                 }
-                else if(sp->moveTbl[sp->current_move_index].power != 0 && sp->battlemon[sp->attack_client].form_no == 0)
+                else if (sp->moveTbl[sp->current_move_index].power != 0 && sp->battlemon[sp->attack_client].form_no == 0)
                 {
-                    //CODE HAS NOT BEEN TESTED
                     sp->battlemon[sp->client_work].form_no = 1;
                     BattleFormChange(sp->client_work, sp->battlemon[sp->client_work].form_no, bw, sp, 0);
                     LoadBattleSubSeqScript(sp, FILE_BATTLE_SUB_SCRIPTS, SUB_SEQ_HANDLE_FORM_CHANGE);
+                    runMyScriptInstead = 1;
                 }
+            }
+            else
+            {
+                sp->wb_seq_no = 0;
             }
             break;
     }

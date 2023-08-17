@@ -18,19 +18,9 @@ extern const u8 StatBoostModifiers[][2];
 
 const u16 SoundproofMoveList[] =
 {
-    MOVE_GROWL,
-    MOVE_ROAR,
-    MOVE_SING,
-    MOVE_SUPERSONIC,
-    MOVE_SCREECH,
-    MOVE_SNORE,
-    MOVE_UPROAR,
-    MOVE_METAL_SOUND,
-    MOVE_GRASS_WHISTLE,
-    MOVE_HYPER_VOICE,
-    MOVE_BUG_BUZZ,
-    MOVE_CHATTER,
     MOVE_BOOMBURST,
+    MOVE_BUG_BUZZ,
+    MOVE_CHATTER,	
     MOVE_CLANGING_SCALES,
     MOVE_CLANGOROUS_SOUL,
     //MOVE_CLANGOROUS_SOULBLAZE,
@@ -38,18 +28,27 @@ const u16 SoundproofMoveList[] =
     MOVE_DISARMING_VOICE,
     MOVE_ECHOED_VOICE,
     MOVE_EERIE_SPELL,
+    MOVE_GRASS_WHISTLE,
+    MOVE_GROWL,
     //MOVE_HEAL_BELL,
     //MOVE_HOWL,
     MOVE_HYPER_VOICE,
+    MOVE_METAL_SOUND,	
     MOVE_NOBLE_ROAR,
     MOVE_OVERDRIVE,
     MOVE_PARTING_SHOT,
     MOVE_PERISH_SONG,
     MOVE_RELIC_SONG,
+    MOVE_ROAR,
     MOVE_ROUND,
+    MOVE_SCREECH,
     //MOVE_SHADOW_PANIC,
+    MOVE_SING,
     MOVE_SNARL,
+    MOVE_SNORE,
     MOVE_SPARKLING_ARIA,
+    MOVE_SUPERSONIC,
+    MOVE_UPROAR,
 };
 
 const u16 BulletproofMoveList[] =
@@ -82,13 +81,13 @@ const u16 BulletproofMoveList[] =
 
 const u16 PowderMoveList[] = {
     MOVE_COTTON_SPORE,
+    MOVE_MAGIC_POWDER,
     MOVE_POISON_POWDER,
-    MOVE_SLEEP_POWDER,
-    MOVE_STUN_SPORE,	
-    MOVE_SPORE,
     MOVE_POWDER,
     MOVE_RAGE_POWDER,
-    MOVE_MAGIC_POWDER,
+    MOVE_SLEEP_POWDER,
+    MOVE_STUN_SPORE,
+    MOVE_SPORE,
 };
 
 int MoveCheckDamageNegatingAbilities(struct BattleStruct *sp, int attacker, int defender)
@@ -239,6 +238,11 @@ enum
     SWITCH_IN_CHECK_FAIRY_AURA,
     SWITCH_IN_CHECK_AURA_BREAK,
     SWITCH_IN_CHECK_IMPOSTER,
+    SWITCH_IN_CHECK_ICE_FACE,
+
+// items that display messages.
+    SWITCH_IN_CHECK_AIR_BALLOON,
+
     SWITCH_IN_CHECK_END,
 };
 
@@ -263,11 +267,16 @@ BOOL IntimidateCheckHelper(u16 ability) //TODO adjust Intimidate switch-in check
     }
 }
 
+
+// this function is actually sorta just run whenever it can, but it's best to think of it as on switch in
+// other item functions happen when they can and aren't ever really on switch in, so those meant to be covered on switch in are done so here
+
+
 int SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
 {   int i;
     int scriptnum = 0;
     int ret = SWITCH_IN_CHECK_LOOP;
-    int client_no;
+    int client_no = 0; // initialize
     int client_set_max;
 
     client_set_max = BattleWorkClientSetMaxGet(bw);
@@ -727,7 +736,7 @@ int SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
                     if ((sp->battlemon[client_no].slow_start_flag == 0)
                         && (sp->battlemon[client_no].hp)
                         && (GetBattlerAbility(sp, client_no) == ABILITY_SLOW_START)
-                        && (sp->total_turn <= sp->battlemon[client_no].moveeffect.slow_start_count))
+                        && (sp->total_turn <= sp->battlemon[client_no].moveeffect.slowStartTurns))
                     {
                         sp->battlemon[client_no].slow_start_flag = 1;
                         sp->client_work = client_no;
@@ -740,7 +749,7 @@ int SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
                     if ((sp->battlemon[client_no].slow_start_end_flag == 0)
                         && (sp->battlemon[client_no].hp)
                         && (GetBattlerAbility(sp, client_no) == ABILITY_SLOW_START)
-                        && ((sp->total_turn-sp->battlemon[client_no].moveeffect.slow_start_count) == 5))
+                        && ((sp->total_turn-sp->battlemon[client_no].moveeffect.slowStartTurns) == 5))
                     {
                         sp->battlemon[client_no].slow_start_end_flag = 1;
                         sp->client_work = client_no;
@@ -966,7 +975,7 @@ int SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
                 }
 
                 sp->attack_client = client_no; // attack transforms into defence
-                sp->current_move_index = MOVE_TRANSFORM;
+                sp->current_move_index = MOVE_TRANSFORM; // force move anim to play
                 if (sp->battlemon[BATTLER_OPPONENT(client_no)].hp != 0 && sp->battlemon[BATTLER_ACROSS(client_no)].hp != 0)
                 {
                     sp->defence_client = (client_no & 1) + ((BattleRand(bw) & 1) * 2); // get random defender
@@ -982,12 +991,12 @@ int SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
                 
                 // fuck it get rid of transform script command:
                 sp->battlemon[sp->attack_client].condition2 |= CONDITION2_TRANSFORM;
-                sp->battlemon[sp->attack_client].moveeffect.kanashibari_wazano = 0;
-                sp->battlemon[sp->attack_client].moveeffect.kanashibari_count = 0;
-                sp->battlemon[sp->attack_client].moveeffect.henshin_rnd = sp->battlemon[sp->defence_client].personal_rnd;
-                sp->battlemon[sp->attack_client].moveeffect.henshin_sex = sp->battlemon[sp->defence_client].sex;
-                sp->battlemon[sp->attack_client].moveeffect.monomane_bit = 0;
-                sp->battlemon[sp->attack_client].moveeffect.totteoki_count = 0;
+                sp->battlemon[sp->attack_client].moveeffect.disabledMove = 0;
+                sp->battlemon[sp->attack_client].moveeffect.disabledTurns = 0;
+                sp->battlemon[sp->attack_client].moveeffect.transformPid = sp->battlemon[sp->defence_client].personal_rnd;
+                sp->battlemon[sp->attack_client].moveeffect.transformGender = sp->battlemon[sp->defence_client].sex;
+                sp->battlemon[sp->attack_client].moveeffect.mimickedMoveIndex = 0;
+                sp->battlemon[sp->attack_client].moveeffect.lastResortCount = 0;
 
                 u8 *src, *dest;
                 src = (u8 *)&sp->battlemon[sp->attack_client];
@@ -1007,10 +1016,11 @@ int SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
                 sp->battlemon[sp->attack_client].frisk_flag = 0;
                 sp->battlemon[sp->attack_client].mold_breaker_flag = 0;
                 sp->battlemon[sp->attack_client].pressure_flag = 0;
-                sp->battlemon[sp->attack_client].moveeffect.namake_bit = sp->total_turn & 1;
-                sp->battlemon[sp->attack_client].moveeffect.slow_start_count = sp->total_turn + 1;
+                sp->battlemon[sp->attack_client].moveeffect.truantFlag = sp->total_turn & 1;
+                sp->battlemon[sp->attack_client].moveeffect.slowStartTurns = sp->total_turn + 1;
                 sp->battlemon[sp->attack_client].slow_start_flag = 0;
                 sp->battlemon[sp->attack_client].slow_start_end_flag = 0;
+                ClearBattleMonFlags(sp, sp->attack_client); // clear extra flags here too
                 
                 for(i = 0; i < 4; i++)
                 {
@@ -1025,6 +1035,62 @@ int SwitchInAbilityCheck(void *bw, struct BattleStruct *sp)
                     }
                 }
                 break;
+            case SWITCH_IN_CHECK_ICE_FACE: // rebuild ice face
+                for (i = 0; i < client_set_max; i++)
+                {
+                    client_no = sp->turn_order[i];
+                    if ((sp->battlemon[client_no].species == SPECIES_EISCUE)
+                     && (sp->battlemon[client_no].hp)
+                     && (sp->battlemon[client_no].form_no == 1)
+                     && (CheckSideAbility(bw, sp, CHECK_ALL_BATTLER_ALIVE, 0, ABILITY_CLOUD_NINE) == 0)
+                     && (CheckSideAbility(bw, sp, CHECK_ALL_BATTLER_ALIVE, 0, ABILITY_AIR_LOCK) == 0)
+                     && (sp->field_condition & WEATHER_HAIL_ANY)               // there is hail this turn
+                     && ((sp->log_hail_for_ice_face & (1 << client_no)) == 0)  // and hail wasn't here last turn/the mon just switched in
+                     && (GetBattlerAbility(sp, client_no) == ABILITY_ICE_FACE)
+                    )
+                    {
+                        sp->client_work = client_no;
+                        BattleFormChange(client_no, 0, bw, sp, TRUE);
+                        sp->battlemon[client_no].form_no = 0;
+                        scriptnum = SUB_SEQ_HANDLE_RESTORE_ICE_FACE;
+                        ret = TRUE;
+                    }
+
+                    if (sp->field_condition & WEATHER_HAIL_ANY) // update log_hail_for_ice_face
+                        sp->log_hail_for_ice_face |= (1 << client_no);
+                    else
+                        sp->log_hail_for_ice_face &= ~(1 << client_no);
+
+                    if (ret)
+                        break;
+                }
+                if (i == client_set_max) {
+                    sp->switch_in_check_seq_no++;
+                }
+                break;
+
+
+
+            case SWITCH_IN_CHECK_AIR_BALLOON:
+                for(i = 0; i < client_set_max; i++)
+                {
+                    client_no = sp->turn_order[i];
+                    if ((sp->battlemon[client_no].air_ballon_flag == 0)
+                     && (sp->battlemon[client_no].hp)
+                     && (BattleItemDataGet(sp, sp->battlemon[client_no].item, 1) == HOLD_EFFECT_UNGROUND_DESTROYED_ON_HIT))
+                    {
+                        sp->battlemon[client_no].air_ballon_flag = 1;
+                        sp->client_work = client_no;
+                        scriptnum = SUB_SEQ_HANDLE_AIR_BALLOON_MESSAGE;
+                        ret = SWITCH_IN_CHECK_MOVE_SCRIPT;
+                        break;
+                    }
+                }
+                if (i == client_set_max) {
+                    sp->switch_in_check_seq_no++;
+                }
+
+
                 // 02253D78
             case SWITCH_IN_CHECK_END:
                 sp->switch_in_check_seq_no = 0;
@@ -1059,7 +1125,7 @@ u32 TurnEndAbilityCheck(void *bw, struct BattleStruct *sp, int client_no)
         case ABILITY_SPEED_BOOST:
             if ((sp->battlemon[client_no].hp)
                 && (sp->battlemon[client_no].states[STAT_SPEED] < 12)
-                && (sp->battlemon[client_no].moveeffect.fake_out_count != (sp->total_turn + 1)))
+                && (sp->battlemon[client_no].moveeffect.fakeOutCount != (sp->total_turn + 1)))
             {
                 sp->addeffect_param = ADD_STATE_SPEED_UP;
                 sp->addeffect_type = ADD_EFFECT_ABILITY;
@@ -1186,19 +1252,6 @@ u32 TurnEndAbilityCheck(void *bw, struct BattleStruct *sp, int client_no)
                 seq_no = SUB_SEQ_HANDLE_MOODY;
                 ret = TRUE;
             }
-        case ABILITY_ICE_FACE: //TODO test this
-            if ((sp->battlemon[client_no].species == SPECIES_EISCUE)
-             && (sp->battlemon[client_no].hp)
-             && (sp->battlemon[client_no].form_no == 1)
-             && (CheckSideAbility(bw, sp, CHECK_ALL_BATTLER_ALIVE, 0, ABILITY_CLOUD_NINE) == 0)
-             && (CheckSideAbility(bw, sp, CHECK_ALL_BATTLER_ALIVE, 0, ABILITY_AIR_LOCK) == 0)
-             && (sp->field_condition & WEATHER_HAIL_ANY))
-            {
-                sp->battlemon[client_no].form_no = 0;
-                seq_no = SUB_SEQ_HANDLE_RESTORE_ICE_FACE;
-                ret = TRUE;
-            }
-            break;
         default:
             break;
     }
@@ -1239,7 +1292,7 @@ BOOL CanPickpocketStealClientItem(struct BattleStruct *sp, int client_no)
     switch(GetBattleMonItem(sp, client_no))
     {
         case ITEM_GRASS_MAIL ... ITEM_BRICK_MAIL:
-        case ITEM_MEGA_STONE_VENUSAUR ... ITEM_MEGA_STONE_DIANCIE:
+        case ITEM_VENUSAURITE ... ITEM_DIANCITE:
         case ITEM_BLUE_ORB:
         case ITEM_RED_ORB:
         case ITEM_GRISEOUS_ORB:
@@ -1310,7 +1363,7 @@ BOOL MoveHitAttackerAbilityCheck(void *bw, struct BattleStruct *sp, int *seq_no)
                 u8 stat = BeastBoostGreatestStatHelper(sp, sp->attack_client);
 
                 if ((sp->battlemon[sp->attack_client].states[STAT_ATTACK + stat] < 12)
-                    && (sp->battlemon[sp->attack_client].moveeffect.fake_out_count != (sp->total_turn + 1)))
+                    && (sp->battlemon[sp->attack_client].moveeffect.fakeOutCount != (sp->total_turn + 1)))
                 {
                     sp->addeffect_param = ADD_STATE_ATTACK_UP + stat;
                     sp->addeffect_type = ADD_EFFECT_ABILITY;
@@ -1796,7 +1849,7 @@ BOOL MoveHitDefenderAbilityCheck(void *bw, struct BattleStruct *sp, int *seq_no)
         case ABILITY_CURSED_BODY:
             move_pos = ST_ServerWazaPosGet(&sp->battlemon[sp->attack_client], sp->current_move_index);
             if (sp->battlemon[sp->defence_client].hp != 0
-             && sp->battlemon[sp->attack_client].moveeffect.kanashibari_wazano == 0
+             && sp->battlemon[sp->attack_client].moveeffect.disabledMove == 0
              && move_pos != 4 // is a valid move the mon knows
              && sp->battlemon[sp->attack_client].pp[move_pos] != 0 // pp is nonzero
              && sp->current_move_index != 0 // a move has already been used
@@ -1804,22 +1857,39 @@ BOOL MoveHitDefenderAbilityCheck(void *bw, struct BattleStruct *sp, int *seq_no)
              && BattleRand(bw) % 10 < 3)
             {
                 sp->waza_work = sp->current_move_index;
-                sp->battlemon[sp->attack_client].moveeffect.kanashibari_wazano = sp->waza_work;
-                sp->battlemon[sp->attack_client].moveeffect.kanashibari_count = 4; // cursed body disables for 4 turns every time
+                sp->battlemon[sp->attack_client].moveeffect.disabledMove = sp->waza_work;
+                sp->battlemon[sp->attack_client].moveeffect.disabledTurns = 4; // cursed body disables for 4 turns every time
                 sp->addeffect_type = ADD_EFFECT_ABILITY;
                 seq_no[0] = SUB_SEQ_HANDLE_CURSED_BODY;
                 ret = TRUE;
             } 
             break;
-        case ABILITY_DISGUISE: //TODO test this
-        case ABILITY_ICE_FACE:
-            if ((sp->battlemon[sp->defence_client].species == SPECIES_MIMIKYU || (sp->battlemon[sp->defence_client].species == SPECIES_EISCUE && sp->moveTbl[sp->current_move_index].split == SPLIT_PHYSICAL))
+        case ABILITY_DISGUISE:
+            if ((sp->battlemon[sp->defence_client].species == SPECIES_MIMIKYU)
              && (sp->battlemon[sp->defence_client].hp)
              && (sp->battlemon[sp->defence_client].form_no == 0)
-             && (sp->battlemon[sp->defence_client].condition2 & CONDITION2_SUBSTITUTE)
+             && ((sp->waza_status_flag & MOVE_STATUS_FLAG_MISS) == 0) // if move was successful
+             && (sp->moveTbl[sp->current_move_index].power) // if move has power
             )
             {
-                sp->battlemon[sp->defence_client].condition2 &= CONDITION2_SUBSTITUTE_OFF;
+                BattleFormChange(sp->defence_client, 1, bw, sp, TRUE);
+                sp->client_work = sp->defence_client;
+                sp->battlemon[sp->defence_client].form_no = 1;
+                seq_no[0] = SUB_SEQ_HANDLE_DISGUISE_ICE_FACE;
+                ret = TRUE;
+            }
+            break;
+        case ABILITY_ICE_FACE:
+            if ((sp->battlemon[sp->defence_client].species == SPECIES_EISCUE)
+             && (sp->battlemon[sp->defence_client].hp)
+             && (sp->battlemon[sp->defence_client].form_no == 0)
+             && ((sp->waza_status_flag & MOVE_STATUS_FLAG_MISS) == 0) // if move was successful
+             && (sp->moveTbl[sp->current_move_index].power != 0)
+             && (sp->moveTbl[sp->current_move_index].split == SPLIT_PHYSICAL)
+            )
+            {
+                BattleFormChange(sp->defence_client, 1, bw, sp, TRUE);
+                sp->client_work = sp->defence_client;
                 sp->battlemon[sp->defence_client].form_no = 1;
                 seq_no[0] = SUB_SEQ_HANDLE_DISGUISE_ICE_FACE;
                 ret = TRUE;
