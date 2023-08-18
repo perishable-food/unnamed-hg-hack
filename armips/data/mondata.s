@@ -21861,6 +21861,57 @@ mondata SPECIES_MEGA_DIANCIE, "-----"
     colorflip 0, 0
     tmdata SPECIES_NONE_TM_DATA_0, SPECIES_NONE_TM_DATA_1, SPECIES_NONE_TM_DATA_2, SPECIES_NONE_TM_DATA_3
 
+mondata SPECIES_MEGA_FLYGON, "-----"
+    basestats 80, 140, 100, 130, 150, 100
+    types TYPE_DRAGON, TYPE_GROUND
+    catchrate 45
+    baseexp 255
+    evyields 0, 0, 1, 0, 0, 2
+    items ITEM_NONE, ITEM_NONE
+    genderratio 127
+    eggcycles 25
+    basefriendship 50
+    growthrate GROWTH_SLOW
+    egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
+    abilities ABILITY_LEVITATE, ABILITY_NONE
+    runchance 0
+    colorflip 0, 0
+    tmdata SPECIES_NONE_TM_DATA_0, SPECIES_NONE_TM_DATA_1, SPECIES_NONE_TM_DATA_2, SPECIES_NONE_TM_DATA_3
+
+mondata SPECIES_MEGA_GASTRODON, "-----"
+    basestats 111, 112, 108, 10, 112, 122
+    types TYPE_WATER, TYPE_GROUND
+    catchrate 45
+    baseexp 255
+    evyields 0, 0, 1, 0, 0, 2
+    items ITEM_NONE, ITEM_NONE
+    genderratio 127
+    eggcycles 25
+    basefriendship 50
+    growthrate GROWTH_SLOW
+    egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
+    abilities ABILITY_STORM_DRAIN, ABILITY_NONE
+    runchance 0
+    colorflip 0, 0
+    tmdata SPECIES_NONE_TM_DATA_0, SPECIES_NONE_TM_DATA_1, SPECIES_NONE_TM_DATA_2, SPECIES_NONE_TM_DATA_3
+
+mondata SPECIES_MEGA_GASTRODON_EAST_SEA, "-----"
+    basestats 111, 112, 108, 10, 112, 122
+    types TYPE_WATER, TYPE_GROUND
+    catchrate 45
+    baseexp 255
+    evyields 0, 0, 1, 0, 0, 2
+    items ITEM_NONE, ITEM_NONE
+    genderratio 127
+    eggcycles 25
+    basefriendship 50
+    growthrate GROWTH_SLOW
+    egggroups EGG_GROUP_UNDISCOVERED, EGG_GROUP_UNDISCOVERED
+    abilities ABILITY_STORM_DRAIN, ABILITY_NONE
+    runchance 0
+    colorflip 0, 0
+    tmdata SPECIES_NONE_TM_DATA_0, SPECIES_NONE_TM_DATA_1, SPECIES_NONE_TM_DATA_2, SPECIES_NONE_TM_DATA_3
+
 mondata SPECIES_GROUDON_PRIMAL, "-----"
     basestats 100, 180, 160, 90, 150, 90
     types TYPE_GROUND, TYPE_FIRE
