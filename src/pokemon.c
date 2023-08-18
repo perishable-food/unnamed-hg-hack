@@ -1267,6 +1267,24 @@ const struct FormData PokeFormDataTbl[]=
         .need_rev = 1,
         .file = SPECIES_MEGA_DIANCIE,
     },
+    {
+        .species = SPECIES_FLYGON,
+        .form_no = 1,
+        .need_rev = 1,
+        .file = SPECIES_MEGA_FLYGON,
+    },
+	{
+        .species = SPECIES_GASTRODON,
+        .form_no = 2,
+        .need_rev = 1,
+        .file = SPECIES_MEGA_GASTRODON,
+    },
+	{
+        .species = SPECIES_GASTRODON_EAST_SEA,
+        .form_no = 3,
+        .need_rev = 1,
+        .file = SPECIES_MEGA_GASTRODON_EAST_SEA,
+    },
 #endif // MEGA_EVOLUTIONS
 
 #ifdef PRIMAL_REVERSION
