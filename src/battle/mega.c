@@ -212,6 +212,18 @@ const struct MegaStruct sMegaTable[] =
         .monindex = SPECIES_DIANCIE, 
         .itemindex = ITEM_DIANCITE,
     },
+    {
+        .monindex = SPECIES_FLYGON, 
+        .itemindex = ITEM_MAWILITE,
+    },
+	{
+        .monindex = SPECIES_GASTRODON, 
+        .itemindex = ITEM_MAWILITE,
+    },
+	{
+        .monindex = SPECIES_GASTRODON_EAST_SEA, 
+        .itemindex = ITEM_MAWILITE,
+    },
 };
 
 const struct MegaStructMove sMegaMoveTable[] =
