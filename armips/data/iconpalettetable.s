@@ -1371,6 +1371,7 @@ gIconPalTable:
 /* SPECIES_REVAVROOM_NAVI              */ .byte  0x0
 /* SPECIES_REVAVROOM_RUCHBAH           */ .byte  0x0
 /* SPECIES_REVAVROOM_CAPH              */ .byte  0x0
+.byte 1
 
 .endarea
 
